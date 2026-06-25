@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Reminder – Your Perfect Daily Routine</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f172a; color: #e2e8f0; font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      padding: 1.5rem; max-width: 700px; margin: 0 auto; line-height: 1.6;
+    }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.3rem; font-weight: 600; margin: 1.5rem 0 0.8rem; border-bottom: 2px solid #334155; padding-bottom: 0.3rem; }
+    .card {
+      background: #1e293b; border-radius: 1rem; padding: 1.3rem; margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .btn {
+      display: inline-block; background: #3b82f6; color: white; padding: 0.85rem 2rem;
+      border: none; border-radius: 2rem; font-size: 1.1rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s; width: 100%; text-align: center;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn:disabled { background: #475569; cursor: not-allowed; }
+    .routine-item {
+      display: flex; justify-content: space-between; padding: 0.6rem 0;
+      border-bottom: 1px solid #334155;
+    }
+    .time { font-weight: 600; color: #93c5fd; min-width: 110px; }
+    .desc { flex: 1; padding-left: 1rem; }
+    .quote {
+      background: #312e81; padding: 1rem; border-radius: 0.8rem; text-align: center;
+      font-style: italic; font-size: 1.1rem; margin-top: 1rem;
+    }
+    .status { margin-top: 1rem; font-size: 0.9rem; color: #a5b4fc; }
+  </style>
+</head>
+<body>
+  <h1>⚡ Focus Reminder</h1>
+  <p>Your 4 AM daily routine – with notifications that keep you on track.</p>
+
+  <div class="card">
+    <h2>🔔 Enable Smart Reminders</h2>
+    <p>Get hourly focus nudges based on your schedule, even when the phone is locked (PWA only).</p>
+    <button id="enableBtn" class="btn">Enable Reminders</button>
+    <div id="statusMsg" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Today's Perfect Routine</h2>
+    <div id="routineContainer"></div>
+  </div>
+
+  <div class="card">
+    <h2>🛡️ Phone Rules</h2>
+    <ul style="padding-left:1.5rem;">
+      <li>Gray‑scale mode on during deep work (triple‑click shortcut)</li>
+      <li>One Sec app installed on Instagram & Twitter</li>
+      <li>Social media only 10:30–10:50 AM (20 min total)</li>
+      <li>Phone lives in a box during work blocks & after dinner</li>
+    </ul>
+    <div class="quote">“You opened me. Why? Close me or CREATE.”</div>
+  </div>
+
+  <script>
+    // Exact daily routine
+    const routine = [
+      { time: "4:00 AM",  desc: "Wake up, 500ml water, no phone" },
+      { time: "4:15 AM",  desc: "Breathwork, meditation, journaling" },
+      { time: "4:45 AM",  desc: "Gym – strength / conditioning" },
+      { time: "5:45 AM",  desc: "Shower, dress, protein shake" },
+      { time: "6:15 AM",  desc: "Driving practice (or design audio course)" },
+      { time: "7:15 AM",  desc: "Breakfast, meal prep lunch" },
+      { time: "8:00 AM",  desc: "Deep work: UX skill upgrade (phone away)" },
+      { time: "9:30 AM",  desc: "Side project / portfolio design" },
+      { time: "10:30 AM", desc: "🌐 Social media window – 20 min ONLY" },
+      { time: "10:50 AM", desc: "Wind down, early lunch, pack for office" },
+      { time: "12:30 PM", desc: "Office – deep design work (phone on DND)" },
+      { time: "8:30 PM",  desc: "Commute home, light dinner, no screens" },
+      { time: "9:00 PM",  desc: "Read physical book, journal, plan next day" },
+      { time: "9:30 PM",  desc: "Phone in box – sleep" }
+    ];
+
+    const routineContainer = document.getElementById('routineContainer');
+    routine.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'routine-item';
+      div.innerHTML = `<span class="time">${item.time}</span><span class="desc">${item.desc}</span>`;
+      routineContainer.appendChild(div);
+    });
+
+    // ---- Notification & Periodic Sync Setup ----
+    const enableBtn = document.getElementById('enableBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('SW registered:', registration);
+          return registration;
+        } catch (err) {
+          console.error('SW registration failed:', err);
+          throw err;
+        }
+      } else {
+        throw new Error('Service workers not supported');
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        throw new Error('Notifications not supported');
+      }
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        throw new Error('Notification permission denied');
+      }
+    }
+
+    async function registerPeriodicSync(registration) {
+      if ('periodicSync' in registration) {
+        try {
+          // Request periodic sync with a tag, min interval ~60 minutes
+          await registration.periodicSync.register('focus-reminder', {
+            minInterval: 60 * 60 * 1000, // 1 hour
+          });
+          console.log('Periodic sync registered');
+          statusMsg.textContent = '✅ Periodic background sync registered. You will receive hourly focus reminders (PWA installed).';
+        } catch (err) {
+          console.warn('Periodic sync could not be registered:', err);
+          statusMsg.textContent = '⚠️ Periodic sync not available. Reminders will work while the page is open.';
+        }
+      } else {
+        statusMsg.textContent = '⚠️ Periodic sync not supported in this browser. Keep the page open for timed reminders.';
+      }
+    }
+
+    // Schedule exact-time notifications for the rest of the day (page open)
+    function scheduleTodayNotifications() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      // Events with approximate hour and minute
+      const eventTimes = [
+        { h: 4, m: 0, msg: "🌅 Rise! Water, breathwork, journal." },
+        { h: 4, m: 45, msg: "🏋️ Gym time – push hard!" },
+        { h: 5, m: 45, msg: "🚿 Shower & protein shake." },
+        { h: 6, m: 15, msg: "🚗 Driving practice now." },
+        { h: 8, m: 0, msg: "🎨 Deep work block – phone in box." },
+        { h: 10, m: 30, msg: "🌐 20-min social media window OPEN. Stay focused!" },
+        { h: 10, m: 50, msg: "⏰ Social media window CLOSED. Wrap up." },
+        { h: 12, m: 30, msg: "💼 Office time – deep design work." },
+        { h: 20, m: 30, msg: "🏠 Commute home, light dinner." },
+        { h: 21, m: 0, msg: "📖 Read & journal. Phone away." },
+        { h: 21, m: 30, msg: "🌙 Sleep time. Put phone in box." }
+      ];
+
+      eventTimes.forEach(event => {
+        const eventTime = new Date(now);
+        eventTime.setHours(event.h, event.m, 0, 0);
+        const diff = eventTime - now;
+        if (diff > 0) {
+          setTimeout(() => {
+            if (Notification.permission === 'granted') {
+              new Notification("⏰ Focus Reminder", { body: event.msg, icon: 'icon.png' });
+            }
+          }, diff);
+          console.log(`Scheduled notification for ${event.h}:${event.m} (in ${Math.round(diff/1000/60)} min)`);
+        }
+      });
+
+      statusMsg.textContent += '\n🕒 Also scheduled exact-time reminders for today (page open).';
+    }
+
+    enableBtn.addEventListener('click', async () => {
+      enableBtn.disabled = true;
+      enableBtn.textContent = 'Setting up...';
+      try {
+        await requestNotificationPermission();
+        const registration = await registerServiceWorker();
+        await registerPeriodicSync(registration);
+        scheduleTodayNotifications();
+        enableBtn.textContent = '✅ Reminders Active';
+        statusMsg.textContent += '\n🔔 Notifications enabled. Stay disciplined!';
+      } catch (error) {
+        enableBtn.disabled = false;
+        enableBtn.textContent = 'Enable Reminders';
+        statusMsg.textContent = '❌ ' + error.message;
+      }
+    });
+
+    // Check if already granted
+    if (Notification.permission === 'granted') {
+      statusMsg.textContent = '🔔 Notifications already allowed. Click to re-schedule.';
+    }
+  </script>
+</body>
+</html>
