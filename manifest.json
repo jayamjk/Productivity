@@ -1,0 +1,21 @@
+{
+  "name": "Focus Reminder – Perfect Routine",
+  "short_name": "FocusReminder",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Hourly focus reminders based on your 4 AM daily routine.",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
