@@ -2,311 +2,854 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus Reminder – Your Perfect Daily Routine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Focus Reminder</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a0f1c">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background: #0f172a; color: #e2e8f0; font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      padding: 1.5rem; max-width: 700px; margin: 0 auto; line-height: 1.6;
+      background: #060b14;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
     }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    h2 { font-size: 1.3rem; font-weight: 600; margin: 1.5rem 0 0.8rem; border-bottom: 2px solid #334155; padding-bottom: 0.3rem; }
+    .app-container {
+      width: 100%;
+      max-width: 430px;
+      height: 100vh;
+      max-height: 932px;
+      background: #0a0f1c;
+      box-shadow: 0 0 80px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border-radius: 0;
+    }
+    @media (min-width: 431px) {
+      .app-container {
+        border-radius: 2.8rem;
+        height: 90vh;
+      }
+    }
+    /* Status Bar */
+    .status-bar {
+      background: rgba(10,15,28,0.95);
+      backdrop-filter: blur(10px);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #8b9bb4;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .app-header {
+      padding: 1.2rem 1.5rem 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .notification-toggle {
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      color: #a5b4fc;
+      padding: 0.5rem 1.2rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .notification-toggle.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.2rem 0.5rem;
+    }
+    .page {
+      display: none;
+      animation: slideUp 0.25s ease;
+    }
+    .page.active {
+      display: block;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Cards */
     .card {
-      background: #1e293b; border-radius: 1rem; padding: 1.3rem; margin-bottom: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      background: rgba(18,25,40,0.8);
+      backdrop-filter: blur(16px);
+      border-radius: 1.4rem;
+      padding: 1.4rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
     }
-    .btn {
-      display: inline-block; background: #3b82f6; color: white; padding: 0.75rem 1.5rem;
-      border: none; border-radius: 2rem; font-size: 1rem; font-weight: 600; cursor: pointer;
-      transition: background 0.2s; text-align: center;
-    }
-    .btn:hover { background: #2563eb; }
-    .btn:disabled { background: #475569; cursor: not-allowed; }
-    .btn-small {
-      padding: 0.4rem 1rem; font-size: 0.85rem; background: #475569; margin-left: 0.5rem;
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 0.8rem;
     }
     .routine-item {
-      display: flex; justify-content: space-between; padding: 0.5rem 0;
-      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.85rem;
     }
-    .time { font-weight: 600; color: #93c5fd; min-width: 110px; }
-    .desc { flex: 1; padding-left: 1rem; }
-    .quote {
-      background: #312e81; padding: 1rem; border-radius: 0.8rem; text-align: center;
-      font-style: italic; font-size: 1.1rem; margin-top: 1rem;
+    .routine-item:last-child { border-bottom: none; }
+    .routine-item .time {
+      font-weight: 600;
+      color: #a5b4fc;
+      min-width: 80px;
     }
-    .status { margin-top: 1rem; font-size: 0.9rem; color: #a5b4fc; white-space: pre-wrap; }
-    .custom-reminder-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #0f172a; padding: 0.7rem; border-radius: 0.5rem; margin-bottom: 0.5rem;
+    .routine-item .desc {
+      flex: 1;
+      padding-left: 0.6rem;
+      color: #cbd5e1;
     }
-    .custom-reminder-item span { flex: 1; font-weight: 500; }
-    .delete-btn { background: #b91c1c; color: white; border: none; border-radius: 0.3rem; padding: 0.3rem 0.6rem; cursor: pointer; }
-    .input-group { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
-    .input-group input {
-      background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 0.6rem;
-      border-radius: 0.5rem; font-size: 0.9rem;
+    .add-todo {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .add-todo input {
+      flex: 1;
+      background: #0f1729;
+      border: 1px solid #2d3a5c;
+      color: #e2e8f0;
+      padding: 0.85rem 1rem;
+      border-radius: 0.8rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .add-todo input:focus { border-color: #6366f1; }
+    .btn {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.4rem;
+      border-radius: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .todo-list {
+      list-style: none;
+      margin-top: 0.2rem;
+    }
+    .todo-list li {
+      display: flex;
+      align-items: center;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .todo-list li input[type="checkbox"] {
+      margin-right: 0.8rem;
+      transform: scale(1.3);
+      accent-color: #6366f1;
+    }
+    .todo-list li .todo-text {
+      flex: 1;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    .todo-list li .todo-text.done {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 0.3rem;
+    }
+    .reminder-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      padding: 0.9rem;
+      border-radius: 0.9rem;
+      margin-bottom: 0.6rem;
+      border: 1px solid #1e293b;
+    }
+    .reminder-info .message {
+      font-weight: 600;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    .reminder-info .meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.2rem;
+    }
+    .reminder-actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+    .icon-btn {
+      background: #1e293b;
+      border: none;
+      color: #e2e8f0;
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .icon-btn:hover { background: #334155; }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(6px);
+    }
+    .modal {
+      background: #131c2e;
+      border-radius: 1.4rem;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 360px;
+      border: 1px solid #2d3a4f;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+    .modal h3 {
+      margin-bottom: 1rem;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    .modal input {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid #2d3a4f;
+      color: #e2e8f0;
+      padding: 0.75rem;
+      border-radius: 0.6rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .modal input:focus { border-color: #6366f1; }
+    .modal label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+    /* Footer Navigation */
+    .footer-nav {
+      background: rgba(10,15,28,0.95);
+      backdrop-filter: blur(12px);
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    }
+    .nav-item {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      background: none;
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 0.5rem;
+      position: relative;
+    }
+    .nav-item.active {
+      color: #a5b4fc;
+    }
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      width: 20px;
+      height: 3px;
+      background: #a5b4fc;
+      border-radius: 3px;
+    }
+    .nav-item .icon {
+      font-size: 1.4rem;
+    }
+    /* Quote */
+    .quote-block {
+      background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+      padding: 1rem;
+      border-radius: 1rem;
+      text-align: center;
+      font-style: italic;
+      margin-top: 1rem;
+      color: #e0e7ff;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
-  <h1>⚡ Focus Reminder</h1>
-  <p>Your 4 AM daily routine + custom reminders. You design the discipline.</p>
+  <div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>⚡ Focus Mode</span>
+    </div>
 
-  <div class="card">
-    <h2>🔔 Enable Smart Reminders</h2>
-    <p>Get routine notifications + your custom reminders (page must stay open for exact intervals).</p>
-    <button id="enableBtn" class="btn">Enable Reminders</button>
-    <div id="statusMsg" class="status"></div>
+    <!-- Header -->
+    <header class="app-header">
+      <h1>⚡ Reminder</h1>
+      <button id="notifToggleBtn" class="notification-toggle">Enable</button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Home Page -->
+      <div id="homePage" class="page active">
+        <div class="card">
+          <h2>📋 Today's Routine</h2>
+          <div id="routineContainer"></div>
+        </div>
+        <div class="card">
+          <h2>🛡️ Phone Rules</h2>
+          <ul style="padding-left:1.5rem; color:#cbd5e1; font-size:0.85rem; line-height:2.2;">
+            <li>Gray‑scale during deep work</li>
+            <li>One Sec on Instagram & Twitter</li>
+            <li>Social media only 10:30–10:50 AM</li>
+            <li>Phone in box during work & after dinner</li>
+          </ul>
+          <div class="quote-block">
+            “You opened me. Why? Close me or CREATE.”
+          </div>
+        </div>
+      </div>
+
+      <!-- Todo Page -->
+      <div id="todoPage" class="page">
+        <div class="card">
+          <h2>📝 Tasks</h2>
+          <div class="add-todo">
+            <input type="text" id="todoInput" placeholder="What's next?">
+            <button id="addTodoBtn" class="btn">Add</button>
+          </div>
+          <ul id="todoList" class="todo-list"></ul>
+        </div>
+      </div>
+
+      <!-- Custom Reminders Page -->
+      <div id="remindersPage" class="page">
+        <div class="card">
+          <h2>⏰ Reminders</h2>
+          <p style="font-size:0.8rem; color:#94a3b8; margin-bottom:1rem;">Tap to edit, holds your schedule.</p>
+          <div id="customRemindersList"></div>
+          <button id="addReminderBtn" class="btn" style="width:100%; margin-top:0.8rem;">+ New Reminder</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Navigation -->
+    <nav class="footer-nav">
+      <button class="nav-item active" data-page="homePage">
+        <span class="icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" data-page="todoPage">
+        <span class="icon">📝</span>
+        <span>Todo</span>
+      </button>
+      <button class="nav-item" data-page="remindersPage">
+        <span class="icon">⏰</span>
+        <span>Reminders</span>
+      </button>
+    </nav>
   </div>
 
-  <div class="card">
-    <h2>🔧 Your Custom Reminders</h2>
-    <p>These reminders fire every <strong>X minutes</strong> while the page is open. Saved automatically.</p>
-    <div id="customList"></div>
-    <div class="input-group">
-      <input type="text" id="newMsg" placeholder="Reminder message" style="flex:2;">
-      <input type="number" id="newInterval" placeholder="Minutes" min="1" value="30" style="width:80px;">
-      <button id="addReminderBtn" class="btn btn-small">Add</button>
+  <!-- Edit Reminder Modal -->
+  <div id="editModal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <h3>Edit Reminder</h3>
+      <label>Message</label>
+      <input type="text" id="editMessage">
+      <label>Interval (minutes)</label>
+      <input type="number" id="editInterval" min="1">
+      <label>Active from</label>
+      <input type="time" id="editStart">
+      <label>Active to</label>
+      <input type="time" id="editEnd">
+      <div class="modal-buttons">
+        <button id="deleteReminderBtn" class="btn" style="background:#b91c1c;">Delete</button>
+        <button id="saveReminderBtn" class="btn">Save</button>
+        <button id="closeModalBtn" class="btn" style="background:#334155;">Cancel</button>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>📋 Today's Perfect Routine</h2>
-    <div id="routineContainer"></div>
-  </div>
-
-  <div class="card">
-    <h2>🛡️ Phone Rules</h2>
-    <ul style="padding-left:1.5rem;">
-      <li>Gray‑scale mode during deep work (triple‑click shortcut)</li>
-      <li>One Sec app installed on Instagram & Twitter</li>
-      <li>Social media only 10:30–10:50 AM (20 min total)</li>
-      <li>Phone lives in a box during work blocks & after dinner</li>
-    </ul>
-    <div class="quote">“You opened me. Why? Close me or CREATE.”</div>
-  </div>
+  <!-- Audio element for custom notification sound -->
+  <audio id="notifSound" preload="auto">
+    <!-- 
+      Replace with your own sound file. 
+      Upload notif.mp3 to your GitHub repo root, then it will be loaded automatically.
+    -->
+    <source src="notif.mp3" type="audio/mpeg">
+  </audio>
 
   <script>
-    // ---------- Fixed Routine ----------
-    const routine = [
-      { time: "4:00 AM",  desc: "Wake up, 500ml water, no phone" },
-      { time: "4:15 AM",  desc: "Breathwork, meditation, journaling" },
-      { time: "4:45 AM",  desc: "Gym – strength / conditioning" },
-      { time: "5:45 AM",  desc: "Shower, dress, protein shake" },
-      { time: "6:15 AM",  desc: "Driving practice (or design audio course)" },
-      { time: "7:15 AM",  desc: "Breakfast, meal prep lunch" },
-      { time: "8:00 AM",  desc: "Deep work: UX skill upgrade (phone away)" },
-      { time: "9:30 AM",  desc: "Side project / portfolio design" },
-      { time: "10:30 AM", desc: "🌐 Social media window – 20 min ONLY" },
-      { time: "10:50 AM", desc: "⏰ Social media window CLOSED. Wrap up." },
-      { time: "12:30 PM", desc: "Office – deep design work (phone on DND)" },
-      { time: "8:30 PM",  desc: "Commute home, light dinner, no screens" },
-      { time: "9:00 PM",  desc: "Read physical book, journal, plan next day" },
-      { time: "9:30 PM",  desc: "Phone in box – sleep" }
-    ];
-
-    const routineContainer = document.getElementById('routineContainer');
-    routine.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'routine-item';
-      div.innerHTML = `<span class="time">${item.time}</span><span class="desc">${item.desc}</span>`;
-      routineContainer.appendChild(div);
-    });
-
-    // ---------- Custom Reminders Management ----------
-    const STORAGE_KEY = 'customReminders';
-    let customReminders = [];
-    let reminderIntervals = []; // store interval IDs so we can clear them
-
-    function loadCustomReminders() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          customReminders = JSON.parse(stored);
-        } catch (e) {
-          customReminders = [];
-        }
-      }
-      // If empty, seed with default drink water reminder
-      if (!customReminders.length) {
-        customReminders = [
-          { id: 'water', message: '💧 Drink water! Stay hydrated.', interval: 30 }
-        ];
-        saveCustomReminders();
-      }
-    }
-
-    function saveCustomReminders() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customReminders));
-    }
-
-    function renderCustomList() {
-      const container = document.getElementById('customList');
-      container.innerHTML = '';
-      customReminders.forEach(rem => {
-        const div = document.createElement('div');
-        div.className = 'custom-reminder-item';
-        div.innerHTML = `
-          <span>${rem.message} <small style="color:#94a3b8;">(every ${rem.interval} min)</small></span>
-          <button class="delete-btn" data-id="${rem.id}">✕</button>
-        `;
-        div.querySelector('.delete-btn').addEventListener('click', () => deleteReminder(rem.id));
-        container.appendChild(div);
-      });
-    }
-
-    function deleteReminder(id) {
-      customReminders = customReminders.filter(r => r.id !== id);
-      saveCustomReminders();
-      renderCustomList();
-      // If reminders are active, restart intervals to reflect changes
-      if (reminderIntervals.length > 0) {
-        startCustomReminderIntervals();
-      }
-    }
-
-    document.getElementById('addReminderBtn').addEventListener('click', () => {
-      const msgInput = document.getElementById('newMsg');
-      const intervalInput = document.getElementById('newInterval');
-      const message = msgInput.value.trim();
-      const interval = parseInt(intervalInput.value, 10);
-      if (!message || isNaN(interval) || interval < 1) {
-        alert('Enter a valid message and interval (minutes >=1).');
-        return;
-      }
-      const newRem = {
-        id: Date.now().toString(),
-        message: message,
-        interval: interval
-      };
-      customReminders.push(newRem);
-      saveCustomReminders();
-      renderCustomList();
-      msgInput.value = '';
-      intervalInput.value = '30';
-      // If reminders active, restart intervals to include new one
-      if (reminderIntervals.length > 0) {
-        startCustomReminderIntervals();
-      }
-    });
-
-    // ---------- Start / Stop Custom Intervals ----------
-    function clearAllIntervals() {
-      reminderIntervals.forEach(id => clearInterval(id));
-      reminderIntervals = [];
-    }
-
-    function startCustomReminderIntervals() {
-      clearAllIntervals();
-      customReminders.forEach(rem => {
-        // Fire first notification immediately? No, wait for the interval.
-        const intervalMs = rem.interval * 60 * 1000;
-        const id = setInterval(() => {
-          if (Notification.permission === 'granted') {
-            new Notification('🔔 Custom Reminder', { body: rem.message, icon: 'icon.png' });
-          }
-        }, intervalMs);
-        reminderIntervals.push(id);
-      });
-    }
-
-    // ---------- Notification Permission & Setup ----------
-    const enableBtn = document.getElementById('enableBtn');
-    const statusMsg = document.getElementById('statusMsg');
-
-    async function registerServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.register('sw.js');
-        return registration;
-      } else {
-        throw new Error('Service workers not supported');
-      }
-    }
-
-    async function requestNotificationPermission() {
-      if (!('Notification' in window)) throw new Error('Notifications not supported');
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') throw new Error('Notification permission denied');
-    }
-
-    async function registerPeriodicSync(registration) {
-      if ('periodicSync' in registration) {
-        try {
-          await registration.periodicSync.register('focus-reminder', {
-            minInterval: 60 * 60 * 1000,
-          });
-          statusMsg.textContent += '✅ Periodic background sync registered.\n';
-        } catch (err) {
-          statusMsg.textContent += '⚠️ Periodic sync not available.\n';
-        }
-      } else {
-        statusMsg.textContent += '⚠️ Periodic sync not supported.\n';
-      }
-    }
-
-    function scheduleRoutineNotifications() {
-      const now = new Date();
-      const eventTimes = [
-        { h: 4, m: 0, msg: "🌅 Rise! Water, breathwork, journal." },
-        { h: 4, m: 45, msg: "🏋️ Gym time – push hard!" },
-        { h: 5, m: 45, msg: "🚿 Shower & protein shake." },
-        { h: 6, m: 15, msg: "🚗 Driving practice now." },
-        { h: 8, m: 0, msg: "🎨 Deep work block – phone in box." },
-        { h: 10, m: 30, msg: "🌐 20-min social media window OPEN. Stay focused!" },
-        { h: 10, m: 50, msg: "⏰ Social media window CLOSED. Wrap up." },
-        { h: 12, m: 30, msg: "💼 Office time – deep design work." },
-        { h: 20, m: 30, msg: "🏠 Commute home, light dinner." },
-        { h: 21, m: 0, msg: "📖 Read & journal. Phone away." },
-        { h: 21, m: 30, msg: "🌙 Sleep time. Put phone in box." }
+    (function() {
+      // ---------- DATA ----------
+      const routine = [
+        { time: "4:00 AM",  desc: "Wake up, 500ml water, no phone" },
+        { time: "4:15 AM",  desc: "Breathwork, meditation, journaling" },
+        { time: "4:45 AM",  desc: "Gym – strength / conditioning" },
+        { time: "5:45 AM",  desc: "Shower, dress, protein shake" },
+        { time: "6:15 AM",  desc: "Driving practice (or design audio)" },
+        { time: "7:15 AM",  desc: "Breakfast, meal prep lunch" },
+        { time: "8:00 AM",  desc: "Deep work: UX skill upgrade" },
+        { time: "9:30 AM",  desc: "Side project / portfolio design" },
+        { time: "10:30 AM", desc: "🌐 Social media window – 20 min ONLY" },
+        { time: "10:50 AM", desc: "⏰ Social media window CLOSED" },
+        { time: "12:30 PM", desc: "Office – deep design work" },
+        { time: "8:30 PM",  desc: "Commute home, light dinner" },
+        { time: "9:00 PM",  desc: "Read physical book, journal" },
+        { time: "9:30 PM",  desc: "Phone in box – sleep" }
       ];
-      eventTimes.forEach(event => {
-        const eventTime = new Date(now);
-        eventTime.setHours(event.h, event.m, 0, 0);
-        const diff = eventTime - now;
-        if (diff > 0) {
-          setTimeout(() => {
-            if (Notification.permission === 'granted') {
-              new Notification("⏰ Focus Reminder", { body: event.msg, icon: 'icon.png' });
-            }
-          }, diff);
+
+      // DOM
+      const pages = {
+        home: document.getElementById('homePage'),
+        todo: document.getElementById('todoPage'),
+        reminders: document.getElementById('remindersPage')
+      };
+      const navItems = document.querySelectorAll('.nav-item');
+      const routineContainer = document.getElementById('routineContainer');
+      const notifToggleBtn = document.getElementById('notifToggleBtn');
+      const todoInput = document.getElementById('todoInput');
+      const addTodoBtn = document.getElementById('addTodoBtn');
+      const todoList = document.getElementById('todoList');
+      const customRemindersList = document.getElementById('customRemindersList');
+      const addReminderBtn = document.getElementById('addReminderBtn');
+      const editModal = document.getElementById('editModal');
+      const editMessage = document.getElementById('editMessage');
+      const editInterval = document.getElementById('editInterval');
+      const editStart = document.getElementById('editStart');
+      const editEnd = document.getElementById('editEnd');
+      const saveReminderBtn = document.getElementById('saveReminderBtn');
+      const deleteReminderBtn = document.getElementById('deleteReminderBtn');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const notifSound = document.getElementById('notifSound');
+
+      // State
+      let customReminders = [];
+      let todoItems = [];
+      let notificationEnabled = false;
+      let reminderIntervals = [];
+      let editingReminderId = null;
+
+      // ---------- STORAGE ----------
+      function loadData() {
+        const storedRems = localStorage.getItem('customReminders_v2');
+        if (storedRems) {
+          try { customReminders = JSON.parse(storedRems); } catch(e) {}
+        }
+        if (!customReminders.length) {
+          customReminders = [{
+            id: 'water',
+            message: '💧 Drink water! Stay hydrated.',
+            interval: 30,
+            activeStart: '06:00',
+            activeEnd: '22:00'
+          }];
+          saveReminders();
+        }
+
+        const storedTodos = localStorage.getItem('todoItems');
+        if (storedTodos) {
+          try { todoItems = JSON.parse(storedTodos); } catch(e) {}
+        }
+
+        notificationEnabled = localStorage.getItem('notificationEnabled') === 'true';
+        updateNotifButton();
+      }
+
+      function saveReminders() {
+        localStorage.setItem('customReminders_v2', JSON.stringify(customReminders));
+      }
+
+      function saveTodos() {
+        localStorage.setItem('todoItems', JSON.stringify(todoItems));
+      }
+
+      function saveNotifState() {
+        localStorage.setItem('notificationEnabled', notificationEnabled);
+      }
+
+      // ---------- UI RENDERS ----------
+      function renderRoutine() {
+        routineContainer.innerHTML = '';
+        routine.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'routine-item';
+          div.innerHTML = `<span class="time">${item.time}</span><span class="desc">${item.desc}</span>`;
+          routineContainer.appendChild(div);
+        });
+      }
+
+      function renderTodos() {
+        todoList.innerHTML = '';
+        todoItems.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <input type="checkbox" ${item.done ? 'checked' : ''} data-index="${index}">
+            <span class="todo-text ${item.done ? 'done' : ''}">${item.text}</span>
+            <button class="delete-btn" data-index="${index}">✕</button>
+          `;
+          todoList.appendChild(li);
+        });
+        document.querySelectorAll('#todoList input[type="checkbox"]').forEach(cb => {
+          cb.addEventListener('change', function() {
+            const idx = this.dataset.index;
+            todoItems[idx].done = this.checked;
+            saveTodos();
+            renderTodos();
+          });
+        });
+        document.querySelectorAll('#todoList .delete-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const idx = this.dataset.index;
+            todoItems.splice(idx, 1);
+            saveTodos();
+            renderTodos();
+          });
+        });
+      }
+
+      function renderCustomReminders() {
+        customRemindersList.innerHTML = '';
+        customReminders.forEach(rem => {
+          const div = document.createElement('div');
+          div.className = 'reminder-item';
+          div.innerHTML = `
+            <div class="reminder-info">
+              <div class="message">${rem.message}</div>
+              <div class="meta">Every ${rem.interval} min | ${rem.activeStart} – ${rem.activeEnd}</div>
+            </div>
+            <div class="reminder-actions">
+              <button class="icon-btn edit-btn" data-id="${rem.id}">✎</button>
+              <button class="icon-btn delete-rem-btn" data-id="${rem.id}">✕</button>
+            </div>
+          `;
+          customRemindersList.appendChild(div);
+        });
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => openEditModal(e.currentTarget.dataset.id));
+        });
+        document.querySelectorAll('.delete-rem-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            customReminders = customReminders.filter(r => r.id !== e.currentTarget.dataset.id);
+            saveReminders();
+            renderCustomReminders();
+            if (notificationEnabled) restartAllReminders();
+          });
+        });
+      }
+
+      function updateNotifButton() {
+        if (notificationEnabled) {
+          notifToggleBtn.textContent = 'Disable';
+          notifToggleBtn.classList.add('active');
+        } else {
+          notifToggleBtn.textContent = 'Enable';
+          notifToggleBtn.classList.remove('active');
+        }
+      }
+
+      // ---------- NAVIGATION ----------
+      function switchPage(pageName) {
+        Object.keys(pages).forEach(key => pages[key].classList.remove('active'));
+        pages[pageName].classList.add('active');
+        navItems.forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.page === pageName + 'Page') item.classList.add('active');
+        });
+      }
+      navItems.forEach(item => {
+        item.addEventListener('click', () => switchPage(item.dataset.page.replace('Page', '')));
+      });
+
+      // ---------- MODAL ----------
+      function openEditModal(id = null) {
+        editingReminderId = id;
+        if (id) {
+          const rem = customReminders.find(r => r.id === id);
+          if (rem) {
+            editMessage.value = rem.message;
+            editInterval.value = rem.interval;
+            editStart.value = rem.activeStart;
+            editEnd.value = rem.activeEnd;
+          }
+        } else {
+          editMessage.value = '';
+          editInterval.value = 30;
+          editStart.value = '06:00';
+          editEnd.value = '22:00';
+        }
+        editModal.style.display = 'flex';
+      }
+
+      function closeModal() {
+        editModal.style.display = 'none';
+        editingReminderId = null;
+      }
+
+      saveReminderBtn.addEventListener('click', () => {
+        const msg = editMessage.value.trim();
+        const interval = parseInt(editInterval.value, 10);
+        const start = editStart.value;
+        const end = editEnd.value;
+        if (!msg || isNaN(interval) || interval < 1 || !start || !end) {
+          alert('Please fill all fields correctly.');
+          return;
+        }
+        if (editingReminderId) {
+          const idx = customReminders.findIndex(r => r.id === editingReminderId);
+          if (idx !== -1) {
+            customReminders[idx] = { ...customReminders[idx], message: msg, interval, activeStart: start, activeEnd: end };
+          }
+        } else {
+          customReminders.push({
+            id: Date.now().toString(),
+            message: msg,
+            interval,
+            activeStart: start,
+            activeEnd: end
+          });
+        }
+        saveReminders();
+        renderCustomReminders();
+        closeModal();
+        if (notificationEnabled) restartAllReminders();
+      });
+
+      deleteReminderBtn.addEventListener('click', () => {
+        if (editingReminderId && confirm('Delete this reminder?')) {
+          customReminders = customReminders.filter(r => r.id !== editingReminderId);
+          saveReminders();
+          renderCustomReminders();
+          closeModal();
+          if (notificationEnabled) restartAllReminders();
         }
       });
-      statusMsg.textContent += '🕒 Routine time notifications scheduled.\n';
-    }
 
-    enableBtn.addEventListener('click', async () => {
-      enableBtn.disabled = true;
-      enableBtn.textContent = 'Setting up...';
-      try {
-        await requestNotificationPermission();
-        const registration = await registerServiceWorker();
-        await registerPeriodicSync(registration);
-        scheduleRoutineNotifications();
-        // Start custom intervals
-        startCustomReminderIntervals();
-        enableBtn.textContent = '✅ Reminders Active';
-        statusMsg.textContent += '🔔 Custom reminders now running. Keep page open for best results.\n';
-      } catch (error) {
-        enableBtn.disabled = false;
-        enableBtn.textContent = 'Enable Reminders';
-        statusMsg.textContent = '❌ ' + error.message;
+      closeModalBtn.addEventListener('click', closeModal);
+      editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) closeModal();
+      });
+      addReminderBtn.addEventListener('click', () => openEditModal(null));
+
+      // ---------- TODO ----------
+      addTodoBtn.addEventListener('click', () => {
+        const text = todoInput.value.trim();
+        if (!text) return;
+        todoItems.push({ id: Date.now().toString(), text, done: false });
+        saveTodos();
+        renderTodos();
+        todoInput.value = '';
+      });
+      todoInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addTodoBtn.click();
+      });
+
+      // ---------- NOTIFICATION ENGINE ----------
+      function playNotificationSound() {
+        if (notifSound) {
+          notifSound.currentTime = 0;
+          notifSound.play().catch(e => console.log('Sound play blocked:', e));
+        }
       }
-    });
 
-    // On page load, check if notifications already granted and remind user to enable
-    if (Notification.permission === 'granted') {
-      statusMsg.textContent = '🔔 Notifications already allowed. Click "Enable Reminders" to start all notifications.';
-    } else {
-      statusMsg.textContent = '🔕 Notifications not yet allowed. Click the button to enable.';
-    }
+      function isInActiveRange(start, end) {
+        const now = new Date();
+        const cur = now.getHours() * 60 + now.getMinutes();
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        const s = sh * 60 + sm;
+        const e = eh * 60 + em;
+        return s <= e ? cur >= s && cur <= e : cur >= s || cur <= e;
+      }
 
-    // Initialize custom reminders UI
-    loadCustomReminders();
-    renderCustomList();
+      function clearAllIntervals() {
+        reminderIntervals.forEach(id => clearInterval(id));
+        reminderIntervals = [];
+      }
+
+      function startCustomIntervals() {
+        clearAllIntervals();
+        customReminders.forEach(rem => {
+          const id = setInterval(() => {
+            if (Notification.permission === 'granted' && isInActiveRange(rem.activeStart, rem.activeEnd)) {
+              playNotificationSound();
+              new Notification('⏰ Reminder', { body: rem.message, icon: 'icon.png' });
+            }
+          }, rem.interval * 60 * 1000);
+          reminderIntervals.push(id);
+        });
+      }
+
+      function scheduleRoutineNotifications() {
+        const now = new Date();
+        const events = [
+          { h: 4, m: 0, msg: "🌅 Rise! Water, breathwork, journal." },
+          { h: 4, m: 45, msg: "🏋️ Gym time – push hard!" },
+          { h: 5, m: 45, msg: "🚿 Shower & protein shake." },
+          { h: 6, m: 15, msg: "🚗 Driving practice now." },
+          { h: 8, m: 0, msg: "🎨 Deep work block – phone in box." },
+          { h: 10, m: 30, msg: "🌐 20-min social media window OPEN." },
+          { h: 10, m: 50, msg: "⏰ Social media window CLOSED." },
+          { h: 12, m: 30, msg: "💼 Office time – deep design work." },
+          { h: 20, m: 30, msg: "🏠 Commute home, light dinner." },
+          { h: 21, m: 0, msg: "📖 Read & journal. Phone away." },
+          { h: 21, m: 30, msg: "🌙 Sleep time. Put phone in box." }
+        ];
+        events.forEach(ev => {
+          const t = new Date(now);
+          t.setHours(ev.h, ev.m, 0, 0);
+          const diff = t - now;
+          if (diff > 0) {
+            setTimeout(() => {
+              if (Notification.permission === 'granted') {
+                playNotificationSound();
+                new Notification("⚡ Routine", { body: ev.msg, icon: 'icon.png' });
+              }
+            }, diff);
+          }
+        });
+      }
+
+      function restartAllReminders() {
+        if (!notificationEnabled || Notification.permission !== 'granted') return;
+        clearAllIntervals();
+        scheduleRoutineNotifications();
+        startCustomIntervals();
+      }
+
+      async function enableNotifications() {
+        if (!('Notification' in window)) {
+          alert('Notifications not supported.');
+          return false;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+          alert('Permission denied.');
+          return false;
+        }
+        if ('serviceWorker' in navigator) {
+          try {
+            const reg = await navigator.serviceWorker.register('sw.js');
+            if ('periodicSync' in reg) {
+              await reg.periodicSync.register('focus-reminder', { minInterval: 60 * 60 * 1000 });
+            }
+          } catch (e) { console.warn('SW/Periodic sync:', e); }
+        }
+        return true;
+      }
+
+      async function toggleNotifications() {
+        if (notificationEnabled) {
+          clearAllIntervals();
+          notificationEnabled = false;
+          saveNotifState();
+          updateNotifButton();
+        } else {
+          const ok = await enableNotifications();
+          if (ok) {
+            notificationEnabled = true;
+            saveNotifState();
+            updateNotifButton();
+            restartAllReminders();
+          }
+        }
+      }
+
+      notifToggleBtn.addEventListener('click', toggleNotifications);
+
+      // ---------- INIT ----------
+      function init() {
+        loadData();
+        renderRoutine();
+        renderTodos();
+        renderCustomReminders();
+        updateNotifButton();
+
+        if (notificationEnabled && Notification.permission === 'granted') {
+          restartAllReminders();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden && notificationEnabled && Notification.permission === 'granted') {
+            restartAllReminders();
+          }
+        });
+      }
+
+      init();
+    })();
   </script>
 </body>
 </html>
