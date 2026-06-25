@@ -348,9 +348,9 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Status Bar -->
+    <!-- Status Bar with live clock -->
     <div class="status-bar">
-      <span>9:41</span>
+      <span id="liveClock">9:41</span>
       <span>⚡ Focus Mode</span>
     </div>
 
@@ -494,6 +494,7 @@
       const deleteReminderBtn = document.getElementById('deleteReminderBtn');
       const closeModalBtn = document.getElementById('closeModalBtn');
       const notifSound = document.getElementById('notifSound');
+      const liveClock = document.getElementById('liveClock');
 
       // State
       let customReminders = [];
@@ -619,6 +620,19 @@
           notifToggleBtn.classList.remove('active');
         }
       }
+
+      // ---------- LIVE CLOCK ----------
+      function updateLiveClock() {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        liveClock.textContent = `${hours}:${minutes} ${ampm}`;
+      }
+      setInterval(updateLiveClock, 1000);
+      updateLiveClock(); // initial call
 
       // ---------- NAVIGATION ----------
       function switchPage(pageName) {
